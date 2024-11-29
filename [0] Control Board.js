@@ -1,4 +1,8 @@
-/* ----------------------------- Main Function Control ---------------------------- */ 
+/* -------------------------------------------------------------------------------- */
+/* ----------------------------- Main Function Control ---------------------------- */
+/* -------------------------------------------------------------------------------- */ 
+
+
 
 function updateDashboards() {
   // Import the data from the Warenausgangsliste of today
@@ -18,14 +22,16 @@ function updateDashboards() {
 };
 
 
-
-/* ----------------------------- User Input ---------------------------- */ 
+/* -------------------------------------------------------------------------------- */
+/* --------------------------- User Input ----------------------------------------- */ 
+/* -------------------------------------------------------------------------------- */
 
   // To enable detailed logging (set 1 for high level, 2 for more detail, 3 for all detail)
-  const loggingDetailLevel = 1;
+  const loggingDetailLevel = 2;
 
-
-/* -------------------------- Global Variables -------------------------- */ 
+/* -------------------------------------------------------------------------------- */
+/* -------------------------- Global Variables ------------------------------------ */ 
+/* -------------------------------------------------------------------------------- */
 
 const torSlideFolderId = "1fdS16gG5tfsArKuCcVp_ufGv00N0_WAA";
 const torSlideFolder = DriveApp.getFolderById(torSlideFolderId);
@@ -46,8 +52,9 @@ const todayDate = new Date().toISOString().split('T')[0];
 
 const scriptProperties = PropertiesService.getScriptProperties();
 
-
-/* -------------------------- Supporting Functions -------------------------- */ 
+/* -------------------------------------------------------------------------------- */
+/* -------------------------- Supporting Functions -------------------------------- */ 
+/* -------------------------------------------------------------------------------- */
 
 function sheetLogger(topic, message) {
   var logSheet = ss.getSheetByName("_Log");
@@ -70,7 +77,16 @@ function sheetLogger(topic, message) {
   Logger.log("Logged: " + message + " at " + timestamp);
 };
 
-function consoleLogger(level, fnc, msg, output) {
+/**
+ * Logs errors in a more comprehensive format than the standard logger.
+ * @param {number} level - Granularity of the logger. Whole number from 1-3. 1 is always logged and 3 is rarely logged.
+ * @param {string} type - Send what kind of logging message it is (Errror, Success, Info, etc.)
+ * @param {string} fnc - The name of the function where this logger is being triggered from
+ * @param {string} msg - The message to be passed along into the logger
+ * @param {string} [output] - Passing along the output for better logging 
+ * @return {void} 
+ */
+function consoleLogger(level, type, fnc, msg, output) {
   if (loggingDetailLevel >= level) {
     var now = new Date();
     var timeDiff = (now - time)/1000
@@ -80,23 +96,26 @@ function consoleLogger(level, fnc, msg, output) {
       "Message" : msg,
       "Seconds taken" : timeDiff,
       "Output" : output
-    }
+    };
 
-    Logger.log(JSON.stringify(logEntry, null, 2));
-
+    Logger.log(`${type} : %s`, JSON.stringify(logEntry, null, 2));
     time = now; 
+  };
+
+  if (type === "Error") {
+    sendEmail_(fnc, "niklas.roepke@hellofresh.de", 
+        "Error with Fernseher Outbound script", 
+        "Script error. Have a look in the logs", 
+        {
+          name: "Fernseher Outbound", 
+          htmlBody : `There was an error. See the script logs <a href="https://script.google.com/home/projects/132_cm7jVXV7VF0BtoYt9uyYhWr5X5dOj4NZnRn1IUpnVWJlP7_N4UeLJ/executions">here.</a><br><br><b>Message:</b><br>${msg}<br><br><b>Output:</b><br>${output}<br>`, 
+          noReply : true
+        })
   };
 };
 
 function sendEmail_(functionName, recipient, subject, body, options = {}) {
-  
-
-
   const property = functionName + "_lastEmail"
-
-  scriptProperties.setProperty(property, "AAA");
-
-  
   const dateLastEmail = scriptProperties.getProperty(property);
 
   if (dateLastEmail === todayDate) {
@@ -130,7 +149,6 @@ function sendEmail_(functionName, recipient, subject, body, options = {}) {
 
   // Optional log for debugging
   Logger.log(`Email sent to ${recipient} with subject: "${subject}"`);
-  Logger.log(scriptProperties.getProperties())
 
   scriptProperties.setProperty(property, todayDate);
 }

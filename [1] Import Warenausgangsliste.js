@@ -4,13 +4,14 @@ function test() {
 
 
 function importData() {
+  Logger.log("------  IMPORTING DATA  ------")
   var fileName = createFileName_();
   var sourceFile = getFileByNameInNestedFolders_(fileName);
   
   if (!sourceFile) {
     sheetLogger("Importing files", `Did not find an active sheet for "${fileName}" in the Warenausgangslisten folder.`);
     sendEmail_( "findWarenausgansliste",
-                "niklas.roepke@hellofresh.de",
+                "rachel.dodds@hellofresh.de",
                 "Missing Warenausgangsliste",
                 "There was an error with finding the right 'Warenausgansliste'", // Default text
                 { name : "Fernseher Outbound - Script",
@@ -21,7 +22,7 @@ function importData() {
                               <ol>
                                 <li>Please check if the file name was generated correctly. Look at the calendar week, day of the week, and day. If there was an error, contact "Niklas Röpke"</li>
                                 <li>Please check if the file was created by logistics properly (in the <a href="https://drive.google.com/drive/u/0/folders/10KU4JwhfRzZkCvVM1gqwB4JZLSQqnMQG" target="_blank">right folder</a> with the right name). If there was an error, please contact DACH Logistics</li>
-                              </ol><br>
+                              </ol>
                               Have a lovely day!<br>`
                 })
     return;
@@ -64,14 +65,13 @@ function importData() {
 
   // Set the formatted values to the target sheet
   sheetImport.getRange(1, 1, formattedData.length, formattedData[0].length).setValues(formattedData);
-  consoleLogger(2, "importData", "done", formattedData);
+  consoleLogger(2, "Success", "importData", "Data was formatted correctly", formattedData.slice(0, 5));
 };
 
 
 // Create the file name to be able to search in the Warenausgangslistenfolder 
 function createFileName_() {
   var today = new Date();
-  Logger.log(today)
   var weekNumber = getCalendarWeek_(today);
   var weekday = getShortWeekday_(today); // Kürzel des Wochentags (MO, DI, etc.)
   var formattedDate = Utilities.formatDate(today, Session.getScriptTimeZone(), 'dd.MM.yyyy'); // Aktuelles Datum im Format TT.MM.YYYY
@@ -79,28 +79,29 @@ function createFileName_() {
   // Erstelle den Dateinamen (KW{Woche}_WA_VE_{Wochentag}_{Datum})
   var fileName = `KW${weekNumber}_WA_VE_${weekday}_${formattedDate}`;
 
-  consoleLogger(2, createFileName_, "Success", fileName);
+  consoleLogger(2, "Success", "createFileName_", "File name successfully created", fileName);
   return fileName; 
 };
 
 
 function getCalendarWeek_(date) {
   // Get ISO Week Number (Week starting on Monday)
-  var isoWeek = getISOWeekNumber(date);
+  var isoWeek = getISOWeekNumber_(date);
   
   // Adjust for Saturday-starting week:
-  var dayOfWeek = date.getDay(); // Sunday = 0, Saturday = 6
+  var dayOfWeek = date.getDay()+10; // Sunday = 0, Saturday = 6
   
   // If the day is Sunday (0), it should belong to the previous Saturday-starting week
   if (dayOfWeek === 0 || dayOfWeek === 6) {  
     isoWeek += 1; // Shift Sunday to the previous week
   } 
 
+  consoleLogger(3, "Sucess", "getCalendarWeek_", "Got the HF week", isoWeek);
   return isoWeek;
 }
 
 // Standard ISO Week calculation
-function getISOWeekNumber(date) {
+function getISOWeekNumber_(date) {
   var tempDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
   var dayOfWeek = tempDate.getDay();
   
@@ -112,14 +113,18 @@ function getISOWeekNumber(date) {
   var startOfYear = new Date(tempDate.getFullYear(), 0, 1);
   var weekNumber = Math.ceil(((tempDate - startOfYear) / (24 * 60 * 60 * 1000) + 1) / 7);
 
-  Logger.log("ISO Week is: " + weekNumber)
+  consoleLogger(3, "Sucess", "getISOWeekNumber_", "Got the ISO week", weekNumber);
   return weekNumber;
 }
 
 // Get the German abbreviation for weekdays (MO, DI, MI, etc.)
 function getShortWeekday_(date) {
   var weekdays = ['SA+SO', 'MO', 'DI', 'MI', 'DO', 'FR', 'SA+SO'];
-  return weekdays[date.getDay()];
+
+  let weekDay = weekdays[date.getDay()]
+  consoleLogger(3, "Sucess", "getShortWeekday_", "Got the weekday (short German)", weekDay);
+
+  return weekDay;
 };
 
 
@@ -156,12 +161,12 @@ function getFileByNameInNestedFolders_(fileName) {
 
     // If a target file is found, return it
     if (targetFile) {
-      consoleLogger(2, getFileByNameInNestedFolders_, "Found file", targetFile);
+      consoleLogger(2, "Success", "getFileByNameInNestedFolders_", "File was found with name: " + fileName, targetFile);
       return targetFile;
     }
   };
   
-  consoleLogger(1, getFileByNameInNestedFolders_, "Did not find a file");
+  consoleLogger(1, "Error", "getFileByNameInNestedFolders_", "Did not find a file with name: " + fileName);
   return null;
 };
 

@@ -2,7 +2,7 @@ function getSlideData() {
   var files = torSlideFolder.getFilesByType(MimeType.GOOGLE_SLIDES);
   var slideData = {}; // Use an object to store each slide's data keyed by "tor"
   
-  consoleLogger(2, "getSlideData", "Files pulled", files);
+  consoleLogger(2, "Success", "getSlideData", "Files pulled", files);
 
   while (files.hasNext()) {
     var file = files.next();
@@ -20,9 +20,10 @@ function getSlideData() {
         "image": image,
         "size_MB": file.getSize() / (1024 * 1024)
       };
-      consoleLogger(2, "getSlideData", "Slides added to dict", slideData[tor]);
+      consoleLogger(2, "Success", "getSlideData", "Slides added to dict", slideData[tor]);
     } else {
       sheetLogger("Double Tor Slide", `Tor "${tor}" already exists! Please only have one.`);
+      consoleLogger(1, "Error", "getSlideData", `Tor "${tor}" already exists! Please only have one.`);
     };
   };
 
@@ -39,12 +40,10 @@ function applyRoutesToSlides(slideData, routes) {
     if (slideData.hasOwnProperty(slide)) { // Check if the property belongs to the object
       var tor = slideData[slide].tor; // Access the tor of the specific presenation 
 
-      // Now we look in the routes folder to see if there are any relevant routes assigned to that Tor
+      // Now we look in the routes folder to see if there are any relevant routes assigned for that Tor
       if (routes[tor] && routes[tor].length > 0) {
         updateSlide_(slideData[slide], routes[tor][0]); // Update the slide text with the first route
-        
-        consoleLogger(2, "getSlideData", "Updated slide " + slideData[slide].tor)
-
+        consoleLogger(2, "Success", "getSlideData", "Updated slide " + slideData[slide].tor);
       } else {
         // If there are no tours planned, this should be reflected on the screens 
         var dict = {
@@ -61,7 +60,7 @@ function applyRoutesToSlides(slideData, routes) {
         };
 
         updateSlide_(slideData[slide], dict);
-        consoleLogger(2, "getSlideData", "No tours planned for slide " + slideData[slide].tor);
+        consoleLogger(2, "Success", "getSlideData", "No tours planned for slide " + slideData[slide].tor);
       };
     };
   };
@@ -82,9 +81,10 @@ function updateSlide_(presentation, dict) {
 
     if (altText in dict) {
       shape.getText().setText(dict[altText])
-      consoleLogger(3, "updateSlide_", "Updated slide content for  " + shape.getText(), dict[altText]) 
+      consoleLogger(3, "Success", "updateSlide_", "Updated slide content for  " + shape.getText(), dict[altText]);
     }
     else if (altText.length != "") {
+      consoleLogger(2, "Error", "updateSlide_", `Did not find "${altText}" in the dictionary for slide ${slide}`);
       sheetLogger(`Did not find "${altText}" in the dictionary.`);
     };
   };
@@ -93,7 +93,7 @@ function updateSlide_(presentation, dict) {
     addQrCode_(slides, dict["Lane"]);
   };
 
-  Logger.log(`Updated slide ${dict["Tor"]}! The next tour is: ${dict["Lane"]} at ${dict["Departure Time"]}`)
+  consoleLogger(2, "Success", "updateSlide_", `Updated slide ${dict["Tor"]}! The next tour is: ${dict["Lane"]} at ${dict["Departure Time"]}`);
 };
 
 function addQrCode_(slides, laneName) {
@@ -124,10 +124,11 @@ function addQrCode_(slides, laneName) {
     newImage.setLeft(centeredLeft).setTop(centeredTop);
     newImage.setDescription("QR Code")
 
-    consoleLogger(2, "addQrCode_", "Added QR code for slide " + slide, image); 
+    consoleLogger(2, "Success", "addQrCode_", "Added QR code for slide " + slide, image);
   } else if (laneName === "Keine Tour Geplant") {
     // Do nothing if it is that
   } else {
+    consoleLogger(2, "Error", "addQrCode_", `No QR code for the "${laneName}" lane could be found in the folder`);
     sheetLogger("Missing QR code", `No QR code for the "${laneName}" lane could be found in the folder`);
   };
 };

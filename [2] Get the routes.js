@@ -79,8 +79,8 @@ function getRoutes() {
       // Check if the current key has more than one entry
       if (routes[key].length > 1) {
         // Update the "Next departure" field for the first entry
-        routes[key][0]["Next departure"] = (routes[key][1]["Departure Time"] + " | " + routes[key][1]["Lane"]); // Replace with actual departure time or logic
-      }
+        routes[key][0]["Next departure"] = (routes[key][1]["Departure Time"] + " | " + routes[key][1]["Lane"]); 
+      };
     };
   };
 
@@ -116,7 +116,7 @@ function getTimeDifferenceMins_(departureTime) {
   // Calculate the difference in minutes
   var diffMins = (totalSeconds1 - totalSeconds2) / (60)
 
-  consoleLogger(3, "getTimeDifferenceMins_", "Info", diffMins)
+  consoleLogger(3, "Info", "getTimeDifferenceMins_", "The difference in minutes between departure time and now", diffMins);
   return diffMins;
 }; 
 
@@ -131,13 +131,14 @@ function getHoursFromMins_(time) {
 
   var output = `${formattedHours}:${formattedMinutes}`
 
-  consoleLogger(3, "getHoursFromMins_", "Info", output)
+  consoleLogger(3, "Info", "getHoursFromMins_", "Format minutes as Hour:Mins", output);
   return output;
 };
 
 function formatTime_(departureTime) {
   if (!(departureTime instanceof Date)) {
     sheetLogger("Time Check", `Input ${departureTime} is not a Date as expected.`)
+    consoleLogger(2, "Error", "formatTime_", `Input ${departureTime} is not a Date as expected.`);
     return;
   }
 
@@ -146,7 +147,7 @@ function formatTime_(departureTime) {
 
   var output = `${hours}:${minutes}`
 
-  consoleLogger(3, "getHoursFromMins_", "Info", output)
+  consoleLogger(3, "Info", "formatTime_", "Format minutes as Hour:Mins", output);
   return output;
 }; 
 
